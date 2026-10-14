@@ -1,42 +1,39 @@
 import json
-import re
+import time
 
-def parse_event_4688(raw_log):
-    """
-    Parses raw Windows Event ID 4688 log strings into normalized JSON telemetry.
-    """
-    parsed_data = {
-        "event_id": 4688,
-        "event_type": "Process Creation",
-        "account_name": None,
-        "new_process_name": None,
-        "parent_process_name": None,
-        "command_line": None
-    }
-    
-    # Extract field data using regex patterns
-    account_match = re.search(r"Account Name:\s+(.+)", raw_log)
-    process_match = re.search(r"New Process Name:\s+(.+)", raw_log)
-    parent_match = re.search(r"Creator Process Name:\s+(.+)", raw_log)
-    cmd_match = re.search(r"Process Command Line:\s+(.+)", raw_log)
+# Target the raw archives stream to catch all telemetry, including level 0 events
+LOG_FILE = "/var/ossec/logs/alerts/alerts.json"
 
-    if account_match:
-        parsed_data["account_name"] = account_match.group(1).strip()
-    if process_match:
-        parsed_data["new_process_name"] = process_match.group(1).strip()
-    if parent_match:
-        parsed_data["parent_process_name"] = parent_match.group(1).strip()
-    if cmd_match:
-        parsed_data["command_line"] = cmd_match.group(1).strip()
+def parse_logs():
+    print("[*] Starting custom Python telemetry pipeline on archives stream...")
+    try:
+        with open(LOG_FILE, "r") as f:
+            f.seek(0, 2)
+            while True:
+                line = f.readline()
+                if not line:
+                    time.sleep(0.5)
+                    continue
 
-    return json.dumps(parsed_data, indent=4)
+                try:
+                    event = json.loads(line)
+                    # Check if it's a Windows event containing data
+                    win_data = event.get("data", {}).get("win", {}).get("eventdata", {})
+                    sys_data = event.get("data", {}).get("win", {}).get("system", {})
+
+                    # Fallback check for Event ID 4688 (Process Creation)
+                    event_id = sys_data.get("eventID") or event.get("data", {}).get("win", {}).get("system",{}).get("eventID")
+
+                    if str(event_id) == "4688":
+                        image = win_data.get("newProcessName", "N/A")
+                        command_line = win_data.get("commandLine", "N/A")
+                        user = win_data.get("subjectUserName", "N/A")
+
+                        print(f"[PARSED 4688] User: {user} | Process:{image} | Cmd: {command_line}")
+                except json.JSONDecodeError:
+                    continue
+    except FileNotFoundError:
+        print(f"[-] Error: Could not find log file at {LOG_FILE}")
 
 if __name__ == "__main__":
-    sample_log = """
-    Event ID: 4688
-    Account Name: Administrator
-    New Process Name: C:\\Windows\\System32\\cmd.exe
-    Creator Process Name: C:\\Windows\\explorer.exe
-    Process Command Line: cmd.exe /c echo Test Security Event
-    """
-    print(parse_event_4688(sample_log))
+    parse_logs()
