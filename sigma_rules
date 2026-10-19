@@ -1,0 +1,49 @@
+<group name="local,windows,process_creation,">
+
+  <!-- Sigma: office_spawns_shell.yml -->
+  <rule id="100010" level="12">
+    <field name="win.system.eventID">^4688$</field>
+    <field name="win.eventdata.parentProcessName" type="pcre2">(?i)\\(winword|excel|powerpnt|outlook)\.exe$</field>
+    <field name="win.eventdata.newProcessName" type="pcre2">(?i)\\(cmd|powershell|pwsh|wscript|cscript|mshta)\.exe$</field>
+    <description>Office application spawned a shell or script host</description>
+    <mitre>
+      <id>T1204.002</id>
+      <id>T1059</id>
+    </mitre>
+  </rule>
+
+  <!-- Sigma: encoded_powershell.yml -->
+  <rule id="100011" level="10">
+    <field name="win.system.eventID">^4688$</field>
+    <field name="win.eventdata.newProcessName" type="pcre2">(?i)\\(powershell|pwsh)\.exe$</field>
+    <field name="win.eventdata.commandLine" type="pcre2">(?i)\s-e(?:nc(?:odedcommand)?|c)?\s+[A-Za-z0-9+/=]{20,}</field>
+    <description>PowerShell launched with an encoded command</description>
+    <mitre>
+      <id>T1059.001</id>
+      <id>T1027</id>
+    </mitre>
+  </rule>
+
+  <!-- Sigma: windows_recon_commands.yml (recon tools) -->
+  <rule id="100012" level="7">
+    <field name="win.system.eventID">^4688$</field>
+    <field name="win.eventdata.newProcessName" type="pcre2">(?i)\\(whoami|systeminfo|nltest|quser|qwinsta)\.exe$</field>
+    <description>Windows reconnaissance tool executed</description>
+    <mitre>
+      <id>T1033</id>
+      <id>T1082</id>
+    </mitre>
+  </rule>
+
+  <!-- Sigma: windows_recon_commands.yml (net.exe account and group enumeration) -->
+  <rule id="100013" level="7">
+    <field name="win.system.eventID">^4688$</field>
+    <field name="win.eventdata.newProcessName" type="pcre2">(?i)\\net1?\.exe$</field>
+    <field name="win.eventdata.commandLine" type="pcre2">(?i)\s(user|group|localgroup|view)\b</field>
+    <description>net.exe used to enumerate users, groups, or hosts</description>
+    <mitre>
+      <id>T1087</id>
+    </mitre>
+  </rule>
+
+</group>
