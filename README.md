@@ -1,5 +1,7 @@
 # SecOps Detection Engineering & Telemetry Pipeline
 
+![ci](https://github.com/ruhulaminivan9887/secops-pipeline/actions/workflows/ci.yml/badge.svg)
+
 A small SOC lab: a Windows Server host generates process-creation events (Event ID 4688), a Wazuh agent ships them to a Wazuh manager on Ubuntu, custom rules raise alerts, and a Python script turns the raw alert stream into clean, normalized JSON.
 
 ## Architecture
@@ -26,6 +28,9 @@ Windows Server 2025                     Ubuntu Server 26.04.1 (10.30.50.34)
 | `sigma_rules/` | Three vendor-neutral Sigma rules (portable detection logic, tagged with MITRE ATT&CK). |
 | `wazuh_rules/local_rules.xml` | The same three detections hand-translated to Wazuh rules, because Wazuh does not execute Sigma YAML directly. |
 | `docs/` | Screenshots of the lab running. |
+| `cases/` | SOC-style case reports written from lab alerts. |
+| `samples/` | Synthetic Wazuh alerts in the real alerts.json format, so the parser can be tried without a lab. |
+| `tests/` | 22 automated tests for the parser, the Wazuh rules and Sigma/Wazuh consistency. |
 
 ## Detections
 
@@ -67,9 +72,37 @@ Use `--from-start --once` to parse everything already in the log and exit.
 
 Watch the result on Ubuntu: `sudo tail -f /var/ossec/logs/alerts/alerts.json | grep '"id":"10001'`
 
+## Try it without a lab
+
+```bash
+python3 scripts/log_parser.py --log samples/sample_alerts.json --from-start --once
+```
+`samples/sample_alerts.json` is synthetic (written by hand in the Wazuh alert format). It holds one event per detection, two normal events, a non-4688 event and one event with no command line.
+
+## Tests
+
+```bash
+pip install pyyaml
+python3 -m unittest discover -s tests -v
+```
+The tests check that the parser extracts every field and survives bad input, that each rule fires on its own sample and stays silent on normal events (including PowerShell with `-ExecutionPolicy Bypass`, which is not an encoded command), and that the Sigma and Wazuh files list the same ATT&CK techniques. They run on every push through GitHub Actions. The rule check is a simulation using Python's regex engine; confirm real behaviour with `wazuh-logtest`.
+
 ## Evidence
 
-Screenshots are in `docs/`: the Windows 4688 events, the live parser stream on Ubuntu, an alert entry showing user, process path, and command-line arguments, the Sigma rule, and `wazuh-logtest` matching a custom rule.
+Screenshots are in `docs/`: the parser reading 362 process-creation events from the Windows host, and `wazuh-logtest` matching custom rule 100012.
+
+## Case reports
+
+Each detection is followed up like a SOC ticket: what fired, evidence, investigation, verdict, action and a tuning idea. Template: `cases/000-TEMPLATE.md`.
+
+| Case | Topic | Verdict |
+|---|---|---|
+| 001 | Action1 remote-management agent running PowerShell | Benign true positive (forgotten install, verified by signature and email trail) |
+| 002 | `whoami` caught by rule 100012 | Benign true positive (own test) |
+
+## License
+
+MIT, see `LICENSE`.
 
 ## Limitations
 

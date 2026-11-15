@@ -1,0 +1,35 @@
+title: Windows Reconnaissance Commands
+id: 9c2a5e18-4d6f-4b07-b3a2-7f1e8c0d4a12
+status: experimental
+description: Detects built-in tools commonly used right after a compromise to learn who the user is, what the system is and which accounts exist.
+references:
+    - https://attack.mitre.org/techniques/T1033/
+    - https://attack.mitre.org/techniques/T1082/
+    - https://attack.mitre.org/techniques/T1087/
+author: Ruhul Amin Ivan
+date: 2026/10/19
+tags:
+    - attack.discovery
+    - attack.t1033
+    - attack.t1082
+    - attack.t1087
+logsource:
+    category: process_creation
+    product: windows
+detection:
+    selection_tools:
+        Image|endswith:
+            - '\whoami.exe'
+            - '\systeminfo.exe'
+            - '\nltest.exe'
+            - '\quser.exe'
+            - '\qwinsta.exe'
+    selection_net:
+        Image|endswith:
+            - '\net.exe'
+            - '\net1.exe'
+        CommandLine|re: '(?i)\s(user|group|localgroup|view)\b'
+    condition: selection_tools or selection_net
+falsepositives:
+    - Administrators and help desk staff running these commands during normal work
+level: low

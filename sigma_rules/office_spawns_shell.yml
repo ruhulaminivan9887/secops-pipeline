@@ -1,0 +1,35 @@
+title: Office Application Spawns Shell or Script Host
+id: 6d1f0c52-7b0e-4a53-9a58-3c1d2a9e1f10
+status: experimental
+description: Detects a Microsoft Office application starting a command shell or script host, a common result of a malicious macro or document.
+references:
+    - https://attack.mitre.org/techniques/T1204/002/
+    - https://attack.mitre.org/techniques/T1059/
+author: Ruhul Amin Ivan
+date: 2026/10/19
+tags:
+    - attack.execution
+    - attack.t1204.002
+    - attack.t1059
+logsource:
+    category: process_creation
+    product: windows
+detection:
+    selection_parent:
+        ParentImage|endswith:
+            - '\winword.exe'
+            - '\excel.exe'
+            - '\powerpnt.exe'
+            - '\outlook.exe'
+    selection_child:
+        Image|endswith:
+            - '\cmd.exe'
+            - '\powershell.exe'
+            - '\pwsh.exe'
+            - '\wscript.exe'
+            - '\cscript.exe'
+            - '\mshta.exe'
+    condition: selection_parent and selection_child
+falsepositives:
+    - Legitimate Office add-ins or macros that call a shell (rare; tune by user and document)
+level: high
