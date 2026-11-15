@@ -85,11 +85,11 @@ python3 scripts/log_parser.py --log samples/sample_alerts.json --from-start --on
 pip install pyyaml
 python3 -m unittest discover -s tests -v
 ```
-The tests check that the parser extracts every field and survives bad input, that each rule fires on its own sample and stays silent on normal events (including PowerShell with `-ExecutionPolicy Bypass`, which is not an encoded command), and that the Sigma and Wazuh files list the same ATT&CK techniques. They run on every push through GitHub Actions. The rule check is a simulation using Python's regex engine; confirm real behaviour with `wazuh-logtest`.
+The tests check that the parser extracts every field and survives bad input, that each rule fires on its own sample and stays silent on normal events (including PowerShell with `-ExecutionPolicy Bypass`, which is not an encoded command), and that the Sigma and Wazuh files list the same ATT&CK techniques. They run on every push through GitHub Actions. The rule check is a simulation using Python's regex engine; `wazuh-logtest` uses the generic JSON decoder, so it does not prove a rule fires on live Windows events (see case 003). Always confirm with a live alert.
 
 ## Evidence
 
-Screenshots are in `docs/`: the parser reading 362 process-creation events from the Windows host, and `wazuh-logtest` matching custom rule 100012.
+Screenshots are in `docs/`: the parser reading 362 process-creation events from the Windows host, `wazuh-logtest` matching custom rule 100012, and a live rule 100013 alert (`docs/04-live-alert-rule-100013.png`).
 
 ## Case reports
 
@@ -99,6 +99,7 @@ Each detection is followed up like a SOC ticket: what fired, evidence, investiga
 |---|---|---|
 | 001 | Action1 remote-management agent running PowerShell | Benign true positive (forgotten install, verified by signature and email trail) |
 | 002 | `whoami` caught by rule 100012 | Benign true positive (own test) |
+| 003 | Custom rules never fired on live traffic (shadowed by built-in rule 67027); fixed, then `net user` caught by 100013 | True positive after fix (own test) |
 
 ## License
 
@@ -106,6 +107,7 @@ MIT, see `LICENSE`.
 
 ## Limitations
 
+- Rules are children of built-in rule 67027 (`if_sid`), so they only fire on events that built-in rule matches.
 - `alerts.json` only contains events that matched a rule. To parse every event, enable `<logall_json>yes</logall_json>` and point `--log` at `archives.json`.
 - The Sigma and Wazuh rules are translated by hand, so they can drift apart. Change both together.
 - This is a single-host lab. The rules are tuned to the commands above and will produce false positives from legitimate administration in a real environment.
