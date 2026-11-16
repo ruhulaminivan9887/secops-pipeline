@@ -91,7 +91,7 @@ The tests check that the parser extracts every field and survives bad input, tha
 
 ## Evidence
 
-Screenshots are in `docs/`: the parser reading 362 process-creation events from the Windows host, `wazuh-logtest` matching custom rule 100012, and a live rule 100013 alert (`docs/04-live-alert-rule-100013.png`), and a live rule 100011 alert (`docs/05-live-alert-rule-100011.png`).
+Screenshots are in `docs/`: the parser reading 362 process-creation events from the Windows host, `wazuh-logtest` matching custom rule 100012, and a live rule 100013 alert (`docs/04-live-alert-rule-100013.png`), a live rule 100011 alert (`docs/05-live-alert-rule-100011.png`), and a live rule 100014 alert (`docs/06-live-alert-rule-100014.png`).
 
 ## Case reports
 
@@ -103,6 +103,7 @@ Each detection is followed up like a SOC ticket: what fired, evidence, investiga
 | 002 | `whoami` caught by rule 100012 | Benign true positive (own test) |
 | 003 | Custom rules never fired on live traffic (shadowed by built-in rule 67027); fixed, then `net user` caught by 100013 | True positive after fix (own test) |
 | 004 | Encoded PowerShell caught live by rule 100011 | True positive (own test, harmless payload) |
+| 005 | Failed-logon burst (brute force) caught by rule 100014; found logon auditing was off | True positive (own test) |
 
 ## License
 
