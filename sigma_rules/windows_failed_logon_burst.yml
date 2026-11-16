@@ -1,0 +1,23 @@
+title: Burst of Failed Windows Logons From One Source
+id: 5b7e2d94-1c3a-4f68-9a0d-3e8b6c21f7a5
+status: experimental
+description: Detects several failed logons (Event 4625) from the same source address in a short time, a common sign of password guessing (brute force or password spraying).
+references:
+    - https://attack.mitre.org/techniques/T1110/
+author: Ruhul Amin Ivan
+date: 2026/11/16
+tags:
+    - attack.credential_access
+    - attack.t1110
+logsource:
+    product: windows
+    service: security
+detection:
+    selection:
+        EventID: 4625
+    timeframe: 60s
+    condition: selection | count() by IpAddress >= 5
+falsepositives:
+    - A user mistyping a password several times
+    - A service or script with an expired password retrying in a loop
+level: medium

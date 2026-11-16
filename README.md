@@ -40,6 +40,7 @@ Windows Server 2025                     Ubuntu Server 26.04.1 (10.30.50.34)
 | PowerShell with an encoded command | `encoded_powershell.yml` | 100011 | 10 | T1059.001, T1027 |
 | Recon tools (`whoami`, `systeminfo`, `nltest`, `quser`, `qwinsta`) | `windows_recon_commands.yml` | 100012 | 7 | T1033, T1082 |
 | `net.exe` user, group, or host enumeration | `windows_recon_commands.yml` | 100013 | 7 | T1087 |
+| 5 or more failed logons (4625) from one source in 60 s | `windows_failed_logon_burst.yml` | 100014 | 10 | T1110 |
 
 ## Setup
 
@@ -69,6 +70,7 @@ Use `--from-start --once` to parse everything already in the log and exit.
 | `net user` | 100013 |
 | `powershell -enc VwByAGkAdABlAC0ASABvAHMAdAAgACIAcwBlAGMAbwBwAHMALQB0AGUAcwB0ACIA` | 100011 |
 | Open Word, run a macro that starts `cmd.exe` | 100010 |
+| `1..6 \| ForEach-Object { net use \\127.0.0.1\IPC$ /user:fakeuser "wrong$_" }` (needs `auditpol /set /subcategory:"Logon" /failure:enable`) | 60122 x6, then 100014 |
 
 Watch the result on Ubuntu: `sudo tail -f /var/ossec/logs/alerts/alerts.json | grep '"id":"10001'`
 

@@ -17,7 +17,7 @@ REQUIRED = ("title", "id", "status", "description", "author", "date", "tags", "l
 class ParityTests(unittest.TestCase):
     def test_every_sigma_file_has_required_keys_and_condition(self):
         files = glob.glob(os.path.join(SIGMA, "*.yml"))
-        self.assertEqual(len(files), 3)
+        self.assertEqual(len(files), 4)
         for path in files:
             doc = yaml.safe_load(read(path))
             for key in REQUIRED:
@@ -31,7 +31,7 @@ class ParityTests(unittest.TestCase):
     def test_wazuh_comments_point_to_real_sigma_files(self):
         text = read(RULES)
         names = re.findall(r"<!-- Sigma: (\S+\.yml)", text)
-        self.assertEqual(len(names), 4)
+        self.assertEqual(len(names), 5)
         for name in names:
             self.assertTrue(os.path.exists(os.path.join(SIGMA, name)), name)
 

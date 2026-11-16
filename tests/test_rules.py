@@ -21,6 +21,9 @@ def load_rules():
             "id": rule.get("id"),
             "level": int(rule.get("level")),
             "fields": [(f.get("name"), f.text) for f in rule.findall("field")],
+            "frequency": rule.get("frequency"),
+            "timeframe": rule.get("timeframe"),
+            "if_matched_sid": (rule.findtext("if_matched_sid") or None),
             "mitre": [i.text for i in rule.findall("mitre/id")],
         })
     return rules
@@ -38,6 +41,8 @@ def lookup(event, dotted):
 def fired(event, rules):
     ids = []
     for rule in rules:
+        if rule["frequency"]:
+            continue  # frequency rules count repeated events over time; Wazuh does that, not this simulator
         ok = True
         for name, pattern in rule["fields"]:
             value = lookup(event, name)
@@ -60,6 +65,13 @@ class RuleTests(unittest.TestCase):
         ids = [r["id"] for r in self.rules]
         self.assertEqual(len(ids), len(set(ids)))
         self.assertTrue(all(100000 <= int(i) <= 119999 for i in ids))
+
+    def test_brute_force_rule_is_a_frequency_rule_on_failed_logons(self):
+        rule = next(r for r in self.rules if r["id"] == "100014")
+        self.assertEqual(rule["if_matched_sid"], "60122")
+        self.assertEqual(int(rule["frequency"]), 5)
+        self.assertEqual(int(rule["timeframe"]), 60)
+        self.assertEqual(rule["mitre"], ["T1110"])
 
     def test_whoami_fires_100012(self):
         self.assertEqual(fired(self.events[0], self.rules), ["100012"])
