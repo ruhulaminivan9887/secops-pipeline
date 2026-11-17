@@ -104,6 +104,7 @@ Each detection is followed up like a SOC ticket: what fired, evidence, investiga
 | 003 | Custom rules never fired on live traffic (shadowed by built-in rule 67027); fixed, then `net user` caught by 100013 | True positive after fix (own test) |
 | 004 | Encoded PowerShell caught live by rule 100011 | True positive (own test, harmless payload) |
 | 005 | Failed-logon burst (brute force) caught by rule 100014; found logon auditing was off | True positive (own test) |
+| 006 | Suspicious "terms update" email in Spam, proven legitimate with SPF/DKIM/DMARC and link checks | Legitimate (Gmail false positive) |
 
 ## License
 
