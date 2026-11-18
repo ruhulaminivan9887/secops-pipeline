@@ -44,3 +44,10 @@ In a real SOC:
 - Work out the real trigger point of the frequency rule and tune it.
 - The alert inherits the group `process_creation` from the parent rule, which is misleading. Give it an authentication group.
 - Exclude known scanners and service accounts that retry with expired passwords.
+
+## Follow-up: permanent fix for logon auditing (19 Nov 2026)
+- Problem: Audit Logon (Failure) kept resetting to "No Auditing" after VM restarts, so rule 100014 could silently stop seeing failed logons.
+- Fix: set Advanced Audit Policy Configuration > Logon/Logoff > Audit Logon to Success and Failure in Local Group Policy, then ran gpupdate /force.
+- Before: auditpol /get /subcategory:"Logon" returned No Auditing.
+- After: the same command returned Success and Failure, and still did after a full restart.
+- Lesson: a detection rule is only as reliable as the logging under it. Verify that the log source survives a reboot, not just that the rule fires once.
